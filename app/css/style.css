@@ -52,6 +52,9 @@ html, body {
 
 .device { display: flex; align-items: center; }
 .device > * + * { margin-left: 1vw; }
+html[lang="ru"] body { font-family: "LG Smart UI", Arial, sans-serif; }
+html[lang="ru"] .tag, html[lang="ru"] .readout dd, html[lang="ru"] #out { font-family: "LG Smart UI", Arial, sans-serif; }
+#btn-language { padding: 0.5vh 0.8vw; font-size: 1.5vh; }
 
 .tag {
   font-size: 1.4vh;

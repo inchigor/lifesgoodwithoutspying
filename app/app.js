@@ -16,11 +16,25 @@
     var lastStatus = null;
     var navigationRowsCache = null;
     var logBtn = document.getElementById('btn-log');
+    var t = window.nospyI18n.t;
+    var lastRoot = null;
+    window.nospyI18n.init();
+    document.addEventListener('nospy-language-change', function () {
+        if (lastRoot !== null) renderState(lastStatus || {}, lastRoot);
+        else {
+            document.getElementById('verdict').textContent = t('Checking…');
+            document.getElementById('explain').textContent = t("Reading the TV's state.");
+            setTag(t('checking'));
+            updateMainButton();
+        }
+        showConsole(!logView.hidden);
+        invalidateNavigation();
+    });
     // Cap the retained log; the oldest lines are dropped past this.
     var MAX_LOG_LINES = 2000;
     var logLines = [];
     function errmsg(e) {
-        return e instanceof Error ? e.message : String(e);
+        return t(e instanceof Error ? e.message : String(e));
     }
     function showConsole(show) {
         logView.hidden = !show;
@@ -31,7 +45,7 @@
         if (show)
             scrollConsoleToBottom();
         if (logBtn)
-            logBtn.textContent = show ? 'Hide log' : 'Show log';
+            logBtn.textContent = t(show ? 'Hide log' : 'Show log');
     }
     // One text node per line, trimmed to MAX_LOG_LINES, so the buffer is not
     // re-parsed on every append and cannot grow for the whole session.
@@ -185,40 +199,41 @@
             return;
         b.classList.remove('pending', 'danger');
         if (!enabled) {
-            b.textContent = 'Enable protection';
+            b.textContent = t('Enable protection');
         }
         else if (dirty) {
-            b.textContent = 'Update protection';
+            b.textContent = t('Update protection');
             b.classList.add('pending');
         }
         else {
-            b.textContent = 'Disable protection';
+            b.textContent = t('Disable protection');
             b.classList.add('danger');
         }
     }
     function setTag(text, cls) {
         var tag = document.getElementById('dev-root');
-        tag.textContent = text;
+        tag.textContent = t(text);
         tag.className = 'tag' + (cls ? ' ' + cls : '');
     }
     function renderState(map, isRoot) {
+        lastRoot = isRoot;
         enabled = map.autostart === 'on';
         document.getElementById('r-domains').textContent = map.blocklist || '—';
         document.getElementById('r-hosts').textContent =
-            map.hosts === 'ours' ? 'active' :
+            t(map.hosts === 'ours' ? 'active' :
             (map.hosts === 'waiting' ? 'waiting' :
-            (map.hosts === 'external' ? 'other' : 'off'));
+            (map.hosts === 'external' ? 'other' : 'off')));
         var dnsRuntime = map.dns_filter || 'unavailable';
         var dnsEnabled = map['dns.filter'] === 'on';
         var dnsIpv6Disabled = map['dns.disable_ipv6'] === 'on';
         document.getElementById('r-dns').textContent =
-            dnsEnabled ?
+            t(dnsEnabled ?
                 (dnsRuntime === 'yes' ? 'active' :
-                    (dnsRuntime === 'no' ? 'pending' : 'unavailable')) : 'off';
+                    (dnsRuntime === 'no' ? 'pending' : 'unavailable')) : 'off');
         document.getElementById('r-ipv6').textContent =
-            !dnsEnabled ? 'not managed' : (dnsIpv6Disabled ? 'disabled' : 'preserved');
-        document.getElementById('r-voice').textContent = map.voice === 'stopped' ? 'stopped' : 'running';
-        document.getElementById('r-ads').textContent = map.ads === 'stopped' ? 'stopped' : 'running';
+            t(!dnsEnabled ? 'not managed' : (dnsIpv6Disabled ? 'disabled' : 'preserved'));
+        document.getElementById('r-voice').textContent = t(map.voice === 'stopped' ? 'stopped' : 'running');
+        document.getElementById('r-ads').textContent = t(map.ads === 'stopped' ? 'stopped' : 'running');
         var verdict = document.getElementById('verdict');
         var explain = document.getElementById('explain');
         verdict.classList.remove('is-secure', 'is-warn', 'is-danger');
@@ -267,6 +282,8 @@
                 appEl.classList.add('secured');
             }
         }
+        verdict.textContent = t(verdict.textContent);
+        explain.textContent = t(explain.textContent);
         updateMainButton();
         invalidateNavigation();
     }
@@ -353,7 +370,7 @@
     // run the passed function, refresh after
     function run(label, fn, then) {
         busy(true);
-        log('> ' + label);
+        log('> ' + t(label));
         return Promise.resolve()
             .then(fn)
             .then(then)
@@ -625,6 +642,10 @@
         stopStatusPolling();
         refresh({ quiet: true });
     }, true);
+    document.getElementById('verdict').textContent = t('Checking…');
+    document.getElementById('explain').textContent = t("Reading the TV's state.");
+    setTag('checking');
+    updateMainButton();
     refresh();
     var main = document.getElementById('btn-main');
     if (main)
